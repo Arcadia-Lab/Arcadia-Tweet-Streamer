@@ -11,6 +11,7 @@ class TweetPrinterV2(tweepy.StreamingClient):
   top_100_coins_dict = get_top_100_cryptos()
   CHAT_ID = os.getenv("CHAT_TEST_ID")
   tweepyClient = getTweepyClient()
+  TOKEN = os.getenv("TELEGRAM_GHOUL_TOKEN")
   
   def on_tweet(self, tweet):
   
@@ -37,9 +38,9 @@ class TweetPrinterV2(tweepy.StreamingClient):
 
 
   def postUrlToTelegram(self, MESSAGE):
-    TOKEN = os.getenv("TELEGRAM_GHOUL_TOKEN")
+    
     print("sending tweet to tg: ", MESSAGE)
-    call = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={self.CHAT_ID}&text={MESSAGE}"
+    call = f"https://api.telegram.org/bot{self.TOKEN}/sendMessage?chat_id={self.CHAT_ID}&text={MESSAGE}"
     requests.get(call).json()
 
 
