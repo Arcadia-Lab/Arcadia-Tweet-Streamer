@@ -1,30 +1,34 @@
 import requests, os, tweepy
 from helpers.tweepyClient import getTweepyClient
 from helpers.top100coins import get_top_100_cryptos
+import pymongo
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class TweetPrinterV2(tweepy.StreamingClient):
 
   top_100_coins_dict = get_top_100_cryptos()
   CHAT_ID = os.getenv("CHAT_TEST_ID")
-  client = getTweepyClient()
-
+  tweepyClient = getTweepyClient()
+  
   def on_tweet(self, tweet):
+  
     tickers = self.getTickers(tweet.text)
-
+    
     url = f"https://twitter.com/{tweet.author_id}/status/{tweet.id}"
 
     if tickers:
-      userObject = self.client.get_user(id=tweet.author_id)
+      userObject = self.tweepyClient.get_user(id=tweet.author_id)
 
       username = userObject[0]["username"]
       fullName = userObject[0]["name"]
 
       tickerString = ""
       for ticker in tickers:
-        tickerString += "$" + ticker + ", "
+        tickerString += "$" + ticker + " "
 
-      MESSAGE = f"{fullName} (@{username}) has tweeted ${tickerString}\n\n{url}"
+      MESSAGE = f"{fullName} (@{username}) has tweeted {tickerString}\n\n{url}"
 
       self.postUrlToTelegram(MESSAGE)
       # self.check_keywords(tweet.text, ticker, url, userObject)
@@ -59,14 +63,14 @@ class TweetPrinterV2(tweepy.StreamingClient):
     return True
 
 
-  def checkForEachNarrative(self, tickers, text, narratives):
+  def checkForEachNarrative(self, tickers, text, narratives): 
     for narrative in narratives:
         # keywords =  query for keywords for each narrative
         keywords = []
         for narrative in narratives:
           self.checkForSingleNarrative(text, keywords)
 
-def checkForSingleNarrative(text, tickers, narrativeKeywords):
+  def checkForSingleNarrative(text, tickers, narrativeKeywords):
 
     text = text.lower()
 
@@ -76,6 +80,7 @@ def checkForSingleNarrative(text, tickers, narrativeKeywords):
            # write to narrative table the ticker
 
 def on_connect(self):
+  
   print("connected")
 
 
