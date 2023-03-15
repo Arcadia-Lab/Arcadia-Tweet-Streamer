@@ -3,6 +3,7 @@ from helpers.tweepyClient import getTweepyClient
 from helpers.top100coins import get_top_100_cryptos
 import pymongo
 from dotenv import load_dotenv
+from classes.dbOperator import dbOperator
 
 load_dotenv()
 
@@ -12,7 +13,8 @@ class TweetPrinterV2(tweepy.StreamingClient):
   CHAT_ID = os.getenv("CHAT_TEST_ID")
   tweepyClient = getTweepyClient()
   TOKEN = os.getenv("TELEGRAM_GHOUL_TOKEN")
-  
+  dbOperator = dbOperator()
+
   def on_tweet(self, tweet):
   
     tickers = self.getTickers(tweet.text)
@@ -64,24 +66,23 @@ class TweetPrinterV2(tweepy.StreamingClient):
     return True
 
 
-  def checkForEachNarrative(self, tickers, text, narratives): 
-    for narrative in narratives:
-        # keywords =  query for keywords for each narrative
-        keywords = []
-        for narrative in narratives:
-          self.checkForSingleNarrative(text, keywords)
+  def extractNarratives(self, text):
 
-  def checkForSingleNarrative(text, tickers, narrativeKeywords):
+    narrativeObjects = self.dbOperator.getNarratives()
 
     text = text.lower()
+    extractedNarrativeIds = []
+    
+    for narrative in narrativeObjects:
+       keywords = narrative["keywords"]
 
-    for keyword in narrativeKeywords:
-        if keyword.lower() in text:
-           pass
-           # write to narrative table the ticker
+       if keywords in text:
+          extractedNarrativeIds.append(narrative["_id"])
+    
+    return extractedNarrativeIds
+
 
 def on_connect(self):
-  
   print("connected")
 
 

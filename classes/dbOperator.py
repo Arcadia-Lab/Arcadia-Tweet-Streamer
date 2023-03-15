@@ -1,9 +1,14 @@
-import datetime
 from pymongo import MongoClient
 from dotenv import load_dotenv
-import os
+import sys, datetime, os
+
+sys.path.append("D:\\Coding Projects\\Arcadia Projects\\arcadia-tweet-notifier")
+
+from helpers.tweepyClient import getTweepyClient
 
 load_dotenv()
+
+tweepyClient = getTweepyClient()
 
 class dbOperator:
 
@@ -11,27 +16,41 @@ class dbOperator:
     db = mongoClient["test"]
 
     def __init__(self) -> None:
-        pass
-    
+        self.tweetsCollection = self.db["tweets"]
+        self.twitterAccountCollection = self.db["twitteraccounts"]
+        self.narrativeCollection = self.db["narratives"]
+
     # Fill tweet document
     def storeTweetToDb(self, tickers, url, accountId, narratives):
-        tweetsCollection = self.db["tweets"]
         
-        # Do a query for twitter account that posted this here
+        twitterAcc = self.twitterAccountCollection.find_one({ "twitterId": accountId })
+        twitterAccMongoId = twitterAcc["_id"]
 
-        newTweet = {
+        newTweetDoc = {
             "tickers": tickers,
             "twitterUrl": url,
             "date": datetime.now(),
-            "twitterAccount": "addhere", # here needed
+            "twitterAccount": twitterAccMongoId,
             "narrative": narratives
         }
+
+        self.tweetsCollection.insert_one(newTweetDoc)
+
+    # Query for all narratives
+    def getNarratives(self):
+        narrativeObjects = list(self.narrativeCollection.find({}))
+
+        print(narrativeObjects)
+
+        return narrativeObjects
 
     # Fill twitter account document
     def fillTwitterAccountCollection(self):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         print(script_dir)
         file_path = os.path.join(script_dir + "\\textfile.txt")
+
+        # Read ids from a txt file in the format: user id
         with open(file_path, "r") as f:
             lines = f.readlines()
             toTrackIdList = []
@@ -42,16 +61,37 @@ class dbOperator:
                 except IndexError:
                     print(line)
 
-            return toTrackIdList
+        for id in toTrackIdList:
+            userObject = tweepyClient.get_user(id=id)
+            username = userObject[0]["username"]
+            fullName = userObject[0]["name"]
             
+            url = f"https://twitter.com/{username}"
+            accountDoc = {
+                "fullName": fullName,
+                "username": username,
+                "twitterId": id,
+                "twitterUrl": url
+            }
+
+            self.twitterAccountCollection.insert_one(accountDoc)
 
     # Fill narrative document
     def fillNarrativeCollection(self):
-        pass
+            narrativeName = [
+                "ZK", "Arbitrum", "Optimism", "AI", "NftFi", "Metaverse", "China", "Perps", "BSC", "Solidly"
+            ]
 
+            for name in narrativeName:
+                # narrativeDoc = { "name": name }
+                # self.narrativeCollection.insert_one(narrativeDoc)
+                
+                narrativeDoc = self.narrativeCollection.find_one({ "name": name })
+
+                keywords = []
+                result = self.narrativeCollection.update_one({ "name": name }, { "$set": { "keywords": keywords } })
 
 operarorDb = dbOperator()
 
-list = operarorDb.fillTwitterAccountCollection()
+operarorDb.getNarratives()
 
-print(list)

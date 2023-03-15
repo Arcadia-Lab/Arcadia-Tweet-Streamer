@@ -1,7 +1,8 @@
 import sys, os
-sys.path.append("D:\\Coding Projects\\gemFinderNotifier\\tweet-notifier")
+sys.path.append("D:\\Coding Projects\\Arcadia Projects\\arcadia-tweet-notifier")
 from tweepy import StreamingClient, StreamRule
 from dotenv import load_dotenv
+from helpers.tweepyClient import getTweepyClient
 
 from classes.TweetPrinterV2 import TweetPrinterV2
 
@@ -9,7 +10,6 @@ load_dotenv()
 
 
 class TweetStreamer:
-
 
     def __init__(self, list1, list2, list3, list4, BEARER_TOKEN):
         self.accountsList1 = list1
