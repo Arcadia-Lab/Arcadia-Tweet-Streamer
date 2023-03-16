@@ -1,23 +1,32 @@
-import sys, os
+import sys
 sys.path.append("D:\\Coding Projects\\Arcadia Projects\\arcadia-tweet-notifier")
-from tweepy import StreamingClient, StreamRule
-from dotenv import load_dotenv
-from helpers.tweepyClient import getTweepyClient
 
+from tweepy import StreamRule
+from dotenv import load_dotenv
+
+from helpers.tweepyClient import getTweepyClient
 from classes.TweetPrinterV2 import TweetPrinterV2
 
 load_dotenv()
 
-
 class TweetStreamer:
 
-    def __init__(self, list1, list2, list3, list4, BEARER_TOKEN):
-        self.accountsList1 = list1
-        self.accountsList2 = list2
-        self.accountsList3 = list3
-        self.accountsList4 = list4
-        self.BEARER_TOKEN = BEARER_TOKEN
-        self.tweetPrinter = TweetPrinterV2(BEARER_TOKEN)
+    def __init__(self, TWITTER_BEARER_TOKEN):
+        self.TWITTER_BEARER_TOKEN = TWITTER_BEARER_TOKEN
+        self.tweetPrinter = TweetPrinterV2(TWITTER_BEARER_TOKEN)
+
+
+    def startStreaming(self):
+        self.cleanRules()
+        rules = []
+        rules.append(StreamRule(self.ruleString(1)))
+        rules.append(StreamRule(self.ruleString(2)))
+        rules.append(StreamRule(self.ruleString(3)))
+        rules.append(StreamRule(self.ruleString(4)))
+        print(rules)
+        self.tweetPrinter.add_rules(rules)
+        self.tweetPrinter.filter(expansions="author_id", tweet_fields="created_at")
+
 
     def cleanRules(self):
         ruleIds = []
@@ -30,12 +39,12 @@ class TweetStreamer:
 
             if len(ruleIds) > 0:
                 self.tweetPrinter.delete_rules(ruleIds)
-                self.tweetPrinter = TweetPrinterV2(self.BEARER_TOKEN)
+                self.tweetPrinter = TweetPrinterV2(self.TWITTER_BEARER_TOKEN)
             else:
                 print("no rules to delete")
 
+
     def ruleString(self, flag):
-        index = 0
         ruleString = ""
         if flag == 1:
             ruleString = '''from: 1001414496819261440 OR from: 1347335187823292416 OR from: 1190283145 OR from: 25071910 OR from: 1411274211444854785 OR from: 1352089119334281216 OR from: 1350996311777161219 OR from: 1297920445979807744 OR from: 784068635958644736 OR from: 1424441728770220037 OR from: 1085046365523066880 OR from: 1138033434 OR from: 1103404363861684236 OR from: 971741153530757120 OR from: 809002141838876673'''
@@ -48,18 +57,7 @@ class TweetStreamer:
         elif flag == 4:
             ruleString = '''from: 1414218305343209477 OR from: 1623236872402083841 OR from: 1448734133400842243 OR from: 1435842469971771393 OR from: 178652396 OR from: 1582601037550325760 OR from: 234748308 OR from: 2966287497'''
 
-        print()
-        print(ruleString)
-        print()
+        print('\n', ruleString, '\n')
         return ruleString
 
-    def startStreaming(self):
-        self.cleanRules()
-        rules = []
-        rules.append(StreamRule(self.ruleString(1)))
-        rules.append(StreamRule(self.ruleString(2)))
-        rules.append(StreamRule(self.ruleString(3)))
-        rules.append(StreamRule(self.ruleString(4)))
-        print(rules)
-        self.tweetPrinter.add_rules(rules)
-        self.tweetPrinter.filter(expansions="author_id", tweet_fields="created_at")
+

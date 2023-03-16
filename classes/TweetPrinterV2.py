@@ -1,49 +1,43 @@
 import requests, os, tweepy
+from dotenv import load_dotenv
+
 from helpers.tweepyClient import getTweepyClient
 from helpers.top100coins import get_top_100_cryptos
-import pymongo
-from dotenv import load_dotenv
+
 from classes.dbOperator import dbOperator
 
 load_dotenv()
 
 class TweetPrinterV2(tweepy.StreamingClient):
 
-  top_100_coins_dict = get_top_100_cryptos()
-  CHAT_ID = os.getenv("CHAT_TEST_ID")
+  TELEGRAM_CHAT_ID = os.getenv("CHAT_TEST_ID")
+  TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_GHOUL_TOKEN")
   tweepyClient = getTweepyClient()
-  TOKEN = os.getenv("TELEGRAM_GHOUL_TOKEN")
   dbOperator = dbOperator()
+  top_100_coins_dict = get_top_100_cryptos()
+
 
   def on_tweet(self, tweet):
-  
+    
     tickers = self.getTickers(tweet.text)
     
     url = f"https://twitter.com/{tweet.author_id}/status/{tweet.id}"
 
     if tickers:
-      userObject = self.tweepyClient.get_user(id=tweet.author_id)
+      tickerString = self.createTickerString(tickers)
 
-      username = userObject[0]["username"]
-      fullName = userObject[0]["name"]
+      twitterAcc = self.dbOperator.getTwitterAccountByid(tweet.author_id)
 
-      tickerString = ""
-      for ticker in tickers:
-        tickerString += "$" + ticker + " "
-
-      MESSAGE = f"{fullName} (@{username}) has tweeted {tickerString}\n\n{url}"
+      MESSAGE = self.createTgMessage(url, tickerString, twitterAcc)
 
       self.postUrlToTelegram(MESSAGE)
-      # self.check_keywords(tweet.text, ticker, url, userObject)
+
+      narrativeIds = self.extractNarratives(tweet.text)
+
+      self.dbOperator.storeTweetToDb(tickers, url, twitterAcc, narrativeIds)
+
     else:
-      print("no ticker:", tweet.text, " ", url)
-
-
-  def postUrlToTelegram(self, MESSAGE):
-    
-    print("sending tweet to tg: ", MESSAGE)
-    call = f"https://api.telegram.org/bot{self.TOKEN}/sendMessage?chat_id={self.CHAT_ID}&text={MESSAGE}"
-    requests.get(call).json()
+      print(f"\NO tickers in the following tweet:\n{tweet.text}\nthat is with the following url: {url}\n")
 
 
   def getTickers(self, text):
@@ -56,14 +50,25 @@ class TweetPrinterV2(tweepy.StreamingClient):
                 if not self.isInTop100(threeLetters):
                     tickers.append(ticker)
     return tickers
+  
+
+  def createTickerString(self, tickers):
+      tickerString = ""
+      for ticker in tickers:
+        tickerString += "$" + ticker + " "
+
+      return tickerString
+  
+
+  def createTgMessage(self, url, tickerString, twitterAcc):
+     return f"""{twitterAcc["fullName"]} (@{twitterAcc["username"]}) has tweeted {tickerString}\n\n{url}"""
 
 
-  def isInTop100(self, threeLetteres):
-    try:
-      get = self.top_100_coins_dict[threeLetteres.upper()]
-    except KeyError:
-      return False
-    return True
+  def postUrlToTelegram(self, MESSAGE):
+    
+    call = f"https://api.telegram.org/bot{self.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id={self.TELEGRAM_CHAT_ID}&text={MESSAGE}"
+    requests.get(call).json()
+    print(f"tweet sent to tg with the message of: {MESSAGE}")
 
 
   def extractNarratives(self, text):
@@ -82,8 +87,15 @@ class TweetPrinterV2(tweepy.StreamingClient):
     return extractedNarrativeIds
 
 
-def on_connect(self):
-  print("connected")
+  def isInTop100(self, threeLetteres):
+    try:
+      get = self.top_100_coins_dict[threeLetteres.upper()]
+    except KeyError:
+      return False
+    return True
+
+  def on_connect(self):
+    print("connected to tweet streamer")
 
 
 

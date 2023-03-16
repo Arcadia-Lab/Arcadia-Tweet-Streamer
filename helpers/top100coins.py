@@ -1,6 +1,5 @@
 import requests
 
-
 def get_top_100_cryptos():
     url = "https://api.coingecko.com/api/v3/coins/markets"
     params = {
@@ -22,7 +21,4 @@ def get_top_100_cryptos():
     return cryptos
 
 
-top_100_coins_dict = get_top_100_cryptos()
 
-
-# print(isCorrect(["C", "B", "A", "O", " "]))

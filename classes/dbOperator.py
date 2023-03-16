@@ -21,9 +21,8 @@ class dbOperator:
         self.narrativeCollection = self.db["narratives"]
 
     # Fill tweet document
-    def storeTweetToDb(self, tickers, url, accountId, narratives):
+    def storeTweetToDb(self, tickers, url, twitterAcc, narrativeIds):
         
-        twitterAcc = self.twitterAccountCollection.find_one({ "twitterId": accountId })
         twitterAccMongoId = twitterAcc["_id"]
 
         newTweetDoc = {
@@ -31,10 +30,14 @@ class dbOperator:
             "twitterUrl": url,
             "date": datetime.now(),
             "twitterAccount": twitterAccMongoId,
-            "narrative": narratives
+            "narrative": narrativeIds
         }
 
         self.tweetsCollection.insert_one(newTweetDoc)
+
+    def getTwitterAccountByid(self, twitterId):
+        return self.twitterAccountCollection.find_one({ "twitterId": twitterId })
+
 
     # Query for all narratives
     def getNarratives(self):
