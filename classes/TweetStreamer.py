@@ -1,10 +1,6 @@
-import sys
-sys.path.append("D:\\Coding Projects\\Arcadia Projects\\arcadia-tweet-notifier")
-
 from tweepy import StreamRule
 from dotenv import load_dotenv
 
-from helpers.tweepyClient import getTweepyClient
 from classes.TweetPrinterV2 import TweetPrinterV2
 
 load_dotenv()

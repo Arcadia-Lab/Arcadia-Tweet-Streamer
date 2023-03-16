@@ -26,7 +26,7 @@ class TweetPrinterV2(tweepy.StreamingClient):
     if tickers:
       tickerString = self.createTickerString(tickers)
 
-      twitterAcc = self.dbOperator.getTwitterAccountByid(tweet.author_id)
+      twitterAcc = self.dbOperator.getTwitterAccountByid(str(tweet.author_id))
 
       MESSAGE = self.createTgMessage(url, tickerString, twitterAcc)
 
@@ -37,7 +37,7 @@ class TweetPrinterV2(tweepy.StreamingClient):
       self.dbOperator.storeTweetToDb(tickers, url, twitterAcc, narrativeIds)
 
     else:
-      print(f"\NO tickers in the following tweet:\n{tweet.text}\nthat is with the following url: {url}\n")
+      print(f"NO tickers in the following tweet:\n{tweet.text}\nthat is with the following url: {url}\n")
 
 
   def getTickers(self, text):
@@ -80,9 +80,10 @@ class TweetPrinterV2(tweepy.StreamingClient):
     
     for narrative in narrativeObjects:
        keywords = narrative["keywords"]
-
-       if keywords in text:
-          extractedNarrativeIds.append(narrative["_id"])
+      
+       for keyword in keywords:
+        if keyword in text:
+            extractedNarrativeIds.append(narrative["_id"])
     
     return extractedNarrativeIds
 
