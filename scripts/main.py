@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -20,6 +20,6 @@ streamTweets()
 #   try:
 #     streamTweets()
 #   except:
-#     print("retry in 15secs: ")
+#     print("something went wrong: retry in 15secs: ")
 #     time.sleep(15)
 #     continue
