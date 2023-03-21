@@ -23,11 +23,14 @@ class dbOperator:
     def storeTweetToDb(self, tickers, url, twitterAcc, narrativeIds):
         
         twitterAccMongoId = twitterAcc["_id"]
+        now = datetime.now()
+
+        formattedDate = now.strftime('%Y-%m-%d %H:%M:%S')
 
         newTweetDoc = {
             "tickers": tickers,
             "twitterUrl": url,
-            "date": datetime.now(),
+            "date": formattedDate,
             "twitterAccount": twitterAccMongoId,
             "narrative": narrativeIds
         }
@@ -39,7 +42,6 @@ class dbOperator:
         return self.twitterAccountCollection.find_one({ "twitterId": twitterId })
 
 
-    # Query for all narratives
     def getNarratives(self):
         narrativeObjects = list(self.narrativeCollection.find({}))
         return narrativeObjects
@@ -84,16 +86,13 @@ class dbOperator:
                 "ZK", "Arbitrum", "Optimism", "AI", "NftFi", "Metaverse", "China", "Perps", "BSC", "Solidly"
             ]
 
-            for name in narrativeName:
-                # narrativeDoc = { "name": name }
-                # self.narrativeCollection.insert_one(narrativeDoc)
-                
-                narrativeDoc = self.narrativeCollection.find_one({ "name": name })
+            keywords = [" binance ", " bsc ", " bnb "]
+            result = self.narrativeCollection.update_one({ "name": "BSC" }, { "$set": { "keywords": keywords } })
 
-                keywords = []
-                result = self.narrativeCollection.update_one({ "name": name }, { "$set": { "keywords": keywords } })
+    def getUndefinedNarrative(self):
+        undefined_narrative = self.narrativeCollection.find_one({"name": "Undefined Narrative"})
+        return undefined_narrative
 
 operarorDb = dbOperator()
 
-acc = operarorDb.getTwitterAccountByid("1001414496819261440")
-print(acc)
+operarorDb.fillNarrativeCollection()

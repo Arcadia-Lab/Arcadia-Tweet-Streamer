@@ -72,20 +72,27 @@ class TweetPrinterV2(tweepy.StreamingClient):
 
 
   def extractNarratives(self, text):
-
-    narrativeObjects = self.dbOperator.getNarratives()
-
-    text = text.lower()
-    extractedNarrativeIds = []
-    
-    for narrative in narrativeObjects:
-       keywords = narrative["keywords"]
+      narrativeObjects = self.dbOperator.getNarratives()
+      text = text.lower()
+      extractedNarrativeIds = []
       
-       for keyword in keywords:
-        if keyword in text:
-            extractedNarrativeIds.append(narrative["_id"])
-    
-    return extractedNarrativeIds
+      for narrative in narrativeObjects:
+          try:
+            keywords = narrative["keywords"]
+          except:
+             continue
+          for keyword in keywords:
+              if keyword in text:
+                  extractedNarrativeIds.append(narrative["_id"])
+      
+      if not extractedNarrativeIds:
+          
+          undefinedNarrative = self.dbOperator.getUndefinedNarrative()
+          if undefinedNarrative:
+              return [undefinedNarrative["_id"]]
+          
+      return extractedNarrativeIds
+
 
 
   def isInTop100(self, threeLetteres):
