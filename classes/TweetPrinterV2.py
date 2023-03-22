@@ -41,15 +41,16 @@ class TweetPrinterV2(tweepy.StreamingClient):
 
 
   def getTickers(self, text):
-    tickers = []
-    for word in text.split(" "):
-        if word.startswith("$") and not word[1:].isdigit() and not word[1:].isnumeric():
-            ticker = word[1:].upper()
-            if len(ticker) == 3 or len(ticker) == 4:
-                threeLetters = ticker[:3]
-                if not self.isInTop100(threeLetters):
-                    tickers.append(ticker)
-    return tickers
+      tickers = []
+      for word in text.split(" "):
+          if word.startswith("$") and not word[1].isdigit():
+              ticker = word[1:].upper()
+              if len(ticker) == 3 or len(ticker) == 4:
+                  threeLetters = ticker[:3]
+                  if not self.isInTop100(threeLetters):
+                      tickers.append(ticker)
+      return tickers
+
 
   def createTickerString(self, tickers):
       tickerString = ""
