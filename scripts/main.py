@@ -6,7 +6,7 @@ from classes.TweetStreamer import TweetStreamer
 
 def streamTweets():
 
-    BEARER_TOKEN = os.getenv("BEARER_TOKEN_3")
+    BEARER_TOKEN = os.getenv("BEARER_TOKEN_1")
 
     streamerOne = TweetStreamer(BEARER_TOKEN)
 

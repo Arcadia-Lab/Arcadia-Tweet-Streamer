@@ -19,7 +19,7 @@ class TweetPrinterV2(tweepy.StreamingClient):
 
   def on_tweet(self, tweet):
     
-    tickers = self.getTickers(tweet.text)
+    tickers = self.extractTickers(tweet.text)
     
     url = f"https://twitter.com/{tweet.author_id}/status/{tweet.id}"
 
@@ -40,15 +40,21 @@ class TweetPrinterV2(tweepy.StreamingClient):
       print(f"NO tickers in the following tweet:\n{tweet.text}\nthat is with the following url: {url}\n")
 
 
-  def getTickers(self, text):
+  def extractTickers(self, text):
       tickers = []
-      for word in text.split(" "):
-          if word.startswith("$") and not word[1].isdigit():
-              ticker = word[1:].upper()
-              if len(ticker) == 3 or len(ticker) == 4:
-                  threeLetters = ticker[:3]
-                  if not self.isInTop100(threeLetters):
-                      tickers.append(ticker)
+
+      print("analyzing this text: ", text)
+
+      text = text.split("\n")
+      for wordWithSpace in text:
+          for word in wordWithSpace.split(" "):
+            if word.startswith("$") and not word[1].isdigit():
+                print(word)
+                ticker = word[1:].upper()
+                if len(ticker) == 3 or len(ticker) == 4:
+                    threeLetters = ticker[:3]
+                    if not self.isInTop100(threeLetters):
+                        tickers.append(ticker)
       return tickers
 
 
