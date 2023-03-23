@@ -19,7 +19,6 @@ class dbOperator:
         self.narrativeCollection = self.db["narratives"]
 
 
-    # Fill tweet document
     def storeTweetToDb(self, tickers, url, twitterAcc, narrativeIds):
         
         twitterAccMongoId = twitterAcc["_id"]
@@ -47,13 +46,11 @@ class dbOperator:
         return narrativeObjects
 
 
-    # Fill twitter account document
     def fillTwitterAccountCollection(self):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         print(script_dir)
         file_path = os.path.join(script_dir + "\\textfile.txt")
 
-        # Read ids from a txt file in the format: user id
         with open(file_path, "r") as f:
             lines = f.readlines()
             toTrackIdList = []
@@ -80,19 +77,25 @@ class dbOperator:
             self.twitterAccountCollection.insert_one(accountDoc)
 
 
-    # Fill narrative document
     def fillNarrativeCollection(self):
             narrativeName = [
                 "ZK", "Arbitrum", "Optimism", "AI", "NftFi", "Metaverse", "China", "Perps", "BSC", "Solidly"
             ]
 
             keywords = [" binance ", " bsc ", " bnb "]
-            result = self.narrativeCollection.update_one({ "name": "BSC" }, { "$set": { "keywords": keywords } })
+            self.narrativeCollection.update_one({ "name": "BSC" }, { "$set": { "keywords": keywords } })
 
-    def getUndefinedNarrative(self):
-        undefined_narrative = self.narrativeCollection.find_one({"name": "Undefined Narrative"})
-        return undefined_narrative
 
-operarorDb = dbOperator()
+    def getUndefinedNarrativeId(self):
+        undefined_narrative = self.narrativeCollection.find_one({"name": "Undefined"})
+        return undefined_narrative.get('_id')
+    
 
-operarorDb.fillNarrativeCollection()
+    def deleteAllTweets(self):
+        result = self.tweetsCollection.delete_many({})
+        print(f"Deleted {result.deleted_count} documents")
+
+
+    def addEmptyArrToUndefinedNarr(self):
+        result = self.narrativeCollection.update_one({"name": "Undefined"}, {"$set": {"keywords": []}})
+

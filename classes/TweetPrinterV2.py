@@ -1,3 +1,4 @@
+import json
 import requests, os, tweepy
 from dotenv import load_dotenv
 
@@ -10,7 +11,7 @@ load_dotenv()
 
 class TweetPrinterV2(tweepy.StreamingClient):
 
-  TELEGRAM_CHAT_ID = os.getenv("CHAT_TEST_ID")
+  TELEGRAM_CHAT_ID = os.getenv("CHAT_PRODUCTION_ID")
   TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_GHOUL_TOKEN")
   tweepyClient = getTweepyClient()
   dbOperator = dbOperator()
@@ -31,6 +32,8 @@ class TweetPrinterV2(tweepy.StreamingClient):
       MESSAGE = self.createTgMessage(url, tickerString, twitterAcc)
 
       self.postUrlToTelegram(MESSAGE)
+
+      self.postToDiscord(MESSAGE)
 
       narrativeIds = self.extractNarratives(tweet.text)
 
@@ -65,34 +68,37 @@ class TweetPrinterV2(tweepy.StreamingClient):
 
 
   def postUrlToTelegram(self, MESSAGE):
-    
     call = f"https://api.telegram.org/bot{self.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id={self.TELEGRAM_CHAT_ID}&text={MESSAGE}"
     requests.get(call).json()
     print(f"tweet sent to tg with the message of: {MESSAGE}")
 
 
-  def extractNarratives(self, text):
-      narrativeObjects = self.dbOperator.getNarratives()
-      text = text.lower()
-      extractedNarrativeIds = []
-      
-      for narrative in narrativeObjects:
-          try:
-            keywords = narrative["keywords"]
-          except:
-             continue
-          for keyword in keywords:
-              if keyword in text:
-                  extractedNarrativeIds.append(narrative["_id"])
-      
-      if not extractedNarrativeIds:
-          
-          undefinedNarrative = self.dbOperator.getUndefinedNarrative()
-          if undefinedNarrative:
-              return [undefinedNarrative["_id"]]
-          
-      return extractedNarrativeIds
+  def postToDiscord(self, MESSAGE):
+     url = "https://discord.com/api/webhooks/1088414836301496411/HxjPldbOEAzSgLprFehTvTy_v5BKuG7rSUsAviFaZrDKz2icjhksgCMxPJ1lHhzJNVDz"
+     data = {"content": MESSAGE}
+     payload = json.dumps(data)
+     requests.post(url, data=payload, headers={"Content-Type": "application/json"})
 
+
+  def extractNarratives(self, text):
+    narrative_objects = self.dbOperator.getNarratives()
+    narrative_keywords = [narrative.get("keywords", []) for narrative in narrative_objects]
+    
+    text = text.lower()
+
+    extracted_narrative_ids = []
+    for i, keywords in enumerate(narrative_keywords):
+        for keyword in keywords:
+            if keyword.lower() in text:
+                extracted_narrative_ids.append(narrative_objects[i]["_id"])
+
+    try:
+       extracted_narrative_ids[0]
+    except:
+       extracted_narrative_ids.append(self.dbOperator.getUndefinedNarrativeId())
+        
+
+    return extracted_narrative_ids
 
 
   def isInTop100(self, threeLetteres):
@@ -101,6 +107,7 @@ class TweetPrinterV2(tweepy.StreamingClient):
     except KeyError:
       return False
     return True
+
 
   def on_connect(self):
     print("connected to tweet streamer")
