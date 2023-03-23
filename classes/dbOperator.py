@@ -1,4 +1,5 @@
 import os
+from bson import ObjectId
 
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -35,6 +36,19 @@ class dbOperator:
         }
 
         self.tweetsCollection.insert_one(newTweetDoc)
+
+        self.addTweetToNarrativeDocument(str(newTweetDoc["_id"]), narrativeIds)
+
+
+    def addTweetToNarrativeDocument(self, tweetObjectId, narrativeObjectIds):
+        for narrativeID in narrativeObjectIds:
+            narrative = self.narrativeCollection.find_one({"_id": ObjectId(narrativeID)})
+            if narrative and "tweets" in narrative:
+                narrative["tweets"].append(ObjectId(tweetObjectId))
+                self.narrativeCollection.update_one(
+                    {"_id": ObjectId(narrativeID)},
+                    {"$set": {"tweets": narrative["tweets"]}}
+                )
 
 
     def getTwitterAccountByid(self, twitterId):
@@ -99,3 +113,8 @@ class dbOperator:
     def addEmptyArrToUndefinedNarr(self):
         result = self.narrativeCollection.update_one({"name": "Undefined"}, {"$set": {"keywords": []}})
 
+
+
+operator = dbOperator()
+
+operator.deleteAllTweets()

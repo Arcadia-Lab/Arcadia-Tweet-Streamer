@@ -15,13 +15,4 @@ def streamTweets():
   streamerOne.startStreaming()
 
 
-## Run this in production
-while True:
-
-  try:
-    keep_alive()
-    streamTweets()
-  except:
-    print("retry in 15secs: ")
-    time.sleep(15)
-    continue
+streamTweets()
