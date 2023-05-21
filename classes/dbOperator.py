@@ -8,44 +8,39 @@ load_dotenv()
 
 
 class dbOperator:
-
-    mongoClient = MongoClient(f'''mongodb+srv://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@cluster0.dvw7rbw.mongodb.net''')
+    mongoClient = MongoClient(
+        f"""mongodb+srv://{os.getenv("MONGO_USERNAME")}:{os.getenv("MONGO_PASSWORD")}@cluster0.dvw7rbw.mongodb.net"""
+    )
     db = mongoClient["test"]
-
 
     def __init__(self) -> None:
         self.tweetsCollection = self.db["tweets"]
         self.twitterAccountCollection = self.db["twitteraccounts"]
         self.narrativeCollection = self.db["narratives"]
 
-
     # Fill tweet document
     def storeTweetToDb(self, tickers, url, twitterAcc, narrativeIds):
-        
         twitterAccMongoId = twitterAcc["_id"]
         now = datetime.now()
 
-        formattedDate = now.strftime('%Y-%m-%d %H:%M:%S')
+        formattedDate = now.strftime("%Y-%m-%d %H:%M:%S")
 
         newTweetDoc = {
             "tickers": tickers,
             "twitterUrl": url,
             "date": formattedDate,
             "twitterAccount": twitterAccMongoId,
-            "narrative": narrativeIds
+            "narrative": narrativeIds,
         }
 
         self.tweetsCollection.insert_one(newTweetDoc)
 
-
     def getTwitterAccountByid(self, twitterId):
-        return self.twitterAccountCollection.find_one({ "twitterId": twitterId })
-
+        return self.twitterAccountCollection.find_one({"twitterId": twitterId})
 
     def getNarratives(self):
         narrativeObjects = list(self.narrativeCollection.find({}))
         return narrativeObjects
-
 
     # Fill twitter account document
     def fillTwitterAccountCollection(self):
@@ -68,31 +63,45 @@ class dbOperator:
             userObject = self.tweepyClient.get_user(id=id)
             username = userObject[0]["username"]
             fullName = userObject[0]["name"]
-            
+
             url = f"https://twitter.com/{username}"
             accountDoc = {
                 "fullName": fullName,
                 "username": username,
                 "twitterId": id,
-                "twitterUrl": url
+                "twitterUrl": url,
             }
 
             self.twitterAccountCollection.insert_one(accountDoc)
 
-
     # Fill narrative document
     def fillNarrativeCollection(self):
-            narrativeName = [
-                "ZK", "Arbitrum", "Optimism", "AI", "NftFi", "Metaverse", "China", "Perps", "BSC", "Solidly"
-            ]
+        narrativeName = [
+            "ZK",
+            "Arbitrum",
+            "Optimism",
+            "AI",
+            "NftFi",
+            "Metaverse",
+            "China",
+            "Perps",
+            "BSC",
+            "Solidly",
+        ]
 
-            keywords = [" binance ", " bsc ", " bnb "]
-            result = self.narrativeCollection.update_one({ "name": "BSC" }, { "$set": { "keywords": keywords } })
+        keywords = [" binance ", " bsc ", " bnb "]
+        result = self.narrativeCollection.update_one(
+            {"name": "BSC"}, {"$set": {"keywords": keywords}}
+        )
 
     def getUndefinedNarrative(self):
-        undefined_narrative = self.narrativeCollection.find_one({"name": "Undefined Narrative"})
+        undefined_narrative = self.narrativeCollection.find_one(
+            {"name": "Undefined Narrative"}
+        )
         return undefined_narrative
 
+
 operarorDb = dbOperator()
+
 
 operarorDb.fillNarrativeCollection()
